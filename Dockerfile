@@ -1,15 +1,20 @@
-FROM alpine:3.5
+FROM alpine:3.10.0
+ 
+LABEL maintainer="xsystems.org"
 
-MAINTAINER xsystems
+ENV LDAP_CONFIG_DIRECTORY="/etc/openldap/slapd.d" \
+    LDAP_CONFIG_FILE="/etc/openldap/slapd.conf"
 
-RUN apk add --no-cache openldap \
- && mkdir -p /usr/local/etc/openldap/slapd.d \
- && chown ldap:ldap /usr/local/etc/openldap/slapd.d \
+RUN apk add --no-cache  openldap \
+                        openldap-back-mdb \
+                        openldap-overlay-memberof \
+ && mkdir --parents ${LDAP_CONFIG_DIRECTORY} \
+ && chown ldap:ldap ${LDAP_CONFIG_DIRECTORY} \
  && chown ldap:ldap /var/lib/openldap/openldap-data
 
 COPY start.sh /etc/openldap/
 
 ENTRYPOINT ["sh", "-c"]
-CMD ["/etc/openldap/start.sh -d 32768 -f /etc/openldap/slapd.conf -F /usr/local/etc/openldap/slapd.d"]
+CMD ["/etc/openldap/start.sh -d any -f ${LDAP_CONFIG_FILE} -F ${LDAP_CONFIG_DIRECTORY}"]
 
 EXPOSE 389
